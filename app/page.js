@@ -10,14 +10,18 @@ export default function Home() {
   const [newDueDate, setNewDueDate] = useState('');
   const [editingTask, setEditingTask] = useState(null); // { id, title, description, status, dueDate }
   const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const API_URL = 'http://localhost:9000/api/tasks'; // Direct backend server connection
 
   // Fetch tasks
   useEffect(() => {
     const fetchTasks = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const res = await fetch('http://localhost:9000/api/tasks');
+        const res = await fetch(API_URL);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -198,7 +202,7 @@ export default function Home() {
 
       {editingTask && (
         <div className="mb-8 p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
-          <h2 class="text-2xl font-semibold mb-4 text-gray-700 dark:text-gray-200">Edit Task</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-gray-700 dark:text-gray-200">Edit Task</h2>
           <input
             type="text"
             value={editingTask.title}
@@ -260,10 +264,10 @@ export default function Home() {
               <div onClick={() => handleToggleComplete(task._id, task.completed, task.title, task.description, task.status, task.dueDate)} className="cursor-pointer flex-grow">
                 <h3 className={`text-xl font-semibold text-gray-800 dark:text-gray-100 ${task.completed ? 'line-through' : ''}`}>{task.title}</h3>
                 {task.description && <p className={`text-sm text-gray-600 dark:text-gray-400 mt-1 ${task.completed ? 'line-through' : ''}`}>{task.description}</p>}
-                <div class="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                  <p><span class="font-medium">Status:</span> {task.status}</p>
-                  {task.dueDate && <p><span class="font-medium">Due:</span> {new Date(task.dueDate).toLocaleDateString()}</p>}
-                  <p><span class="font-medium">Created:</span> {new Date(task.createdAt).toLocaleDateString()}</p>
+                <div className="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p><span className="font-medium">Status:</span> {task.status}</p>
+                  {task.dueDate && <p><span className="font-medium">Due:</span> {new Date(task.dueDate).toLocaleDateString()}</p>}
+                  <p><span className="font-medium">Created:</span> {new Date(task.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
               <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2 sm:gap-3 ml-4 items-end sm:items-center"> {/* Adjusted for better responsiveness */}

@@ -1,51 +1,61 @@
 import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../utils/axiosConfig";
 import { useSelector, useDispatch } from "react-redux";
 import { hideLoading, showLoading } from "../redux/features/alertSlice";
-import { setUser } from "../redux/features/userSlice";
+import { setCredentials, logout } from "../redux/features/authSlice";
 
 export default function ProtectedRoute({ children }) {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.user);
+  const { isAuthenticated, token } = useSelector((state) => state.auth);
 
-  //get user
-  //eslint-disable-next-line
+  // Get user data from token
   const getUser = async () => {
     try {
       dispatch(showLoading());
-      const res = await axios.post(
-        "/api/v1/user/getUserData",
-        { token: localStorage.getItem("token") },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        dispatch(logout());
+        dispatch(hideLoading());
+        return;
+      }
+      
+      const res = await axiosInstance.post("/api/auth/getUserData", {});
+      
       dispatch(hideLoading());
       if (res.data.success) {
-        dispatch(setUser(res.data.data));
+        dispatch(setCredentials({
+          user: res.data.data,
+          token: token
+        }));
       } else {
-        localStorage.clear();
-        <Navigate to="/login" />;
+        dispatch(logout());
       }
     } catch (error) {
-      localStorage.clear();
+      console.error("Authentication error:", error);
+      dispatch(logout());
       dispatch(hideLoading());
-      console.log(error);
     }
   };
 
   useEffect(() => {
-    if (!user) {
+    if (!isAuthenticated && localStorage.getItem("token")) {
       getUser();
     }
-  }, [user, getUser]);
+  }, [isAuthenticated]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
+  // If authenticated, render children
+  if (isAuthenticated) {
+    return children;
+  } 
+  
+  // If there's a token but not authenticated yet, we're still validating
   if (localStorage.getItem("token")) {
     return children;
-  } else {
-    return <Navigate to="/login" />;
-  }
+  } 
+  
+  // No token and not authenticated, redirect to login
+  return <Navigate to="/login" />
 }

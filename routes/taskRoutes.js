@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
+const { protect } = require('../middleware/authMiddleware');
 
 // @route   GET api/tasks
-// @desc    Get all tasks
-// @access  Public
-router.get('/', async (req, res) => {
+// @desc    Get all tasks for logged in user
+// @access  Private
+router.get('/', protect, async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const tasks = await Task.find({ user: req.user._id }).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
     console.error(err.message);
@@ -17,11 +18,12 @@ router.get('/', async (req, res) => {
 
 // @route   POST api/tasks
 // @desc    Create a task
-// @access  Public
-router.post('/', async (req, res) => {
+// @access  Private
+router.post('/', protect, async (req, res) => {
   const { title, description, status, dueDate } = req.body;
   try {
     const newTask = new Task({
+      user: req.user._id,
       title,
       description,
       status,
@@ -37,8 +39,8 @@ router.post('/', async (req, res) => {
 
 // @route   PUT api/tasks/:id
 // @desc    Update a task (mark as completed/uncompleted or edit title/description)
-// @access  Public
-router.put('/:id', async (req, res) => {
+// @access  Private
+router.put('/:id', protect, async (req, res) => {
   const { title, description, completed, status, dueDate } = req.body;
   try {
     let task = await Task.findById(req.params.id);

@@ -148,6 +148,7 @@
   flex: 1;
   border-bottom: 1px solid #e0e0e0;
 }
+/* Remove social login and divider styles */
 .social-login-options {
   display: flex;
   flex-direction: column;

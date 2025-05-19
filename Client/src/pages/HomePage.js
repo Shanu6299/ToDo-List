@@ -1,39 +1,30 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect } from "react";
 import Layout from "./../components/Layout";
-import { Row } from "antd";
-import DoctorList from "../components/DoctorList";
-const HomePage = () => {
-  const [doctors, setDoctors] = useState([]);
-  // login user data
-  const getUserData = async () => {
-    try {
-      const res = await axios.get(
-        "/api/v1/user/getAllDoctors",
+import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { initializeAuth } from "../redux/features/authSlice";
+import TodoList from "../../app/components/TodoList";
+import axiosInstance from "../utils/axiosConfig";
+import "../styles/HomePage.css";
 
-        {
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        }
-      );
-      if (res.data.success) {
-        setDoctors(res.data.data);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+const HomePage = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    getUserData();
-  }, []);
+    // Initialize authentication state from localStorage
+    dispatch(initializeAuth());
+    
+    // If not authenticated, redirect to login
+    if (!isAuthenticated && !localStorage.getItem('token')) {
+      navigate("/login");
+    }
+  }, [navigate, dispatch, isAuthenticated]);
+
   return (
     <Layout>
-      <h1 className="text-center">Home Page</h1>
-      <Row>
-        {doctors && doctors.map((doctor) => <DoctorList doctor={doctor} />)}
-      </Row>
+      <TodoList />
     </Layout>
   );
 };

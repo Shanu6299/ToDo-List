@@ -1,35 +1,32 @@
 import React from 'react';
 import "../styles/RegisterStyles.css";
 import { Form, Input, message } from 'antd';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { showLoading, hideLoading } from '../redux/features/alertSlice';
-import { FacebookOutlined, TwitterOutlined, InstagramOutlined } from "@ant-design/icons";
 
 const Register = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  // form handler
   const onFinishHandler = async (values) => {
     try {
       dispatch(showLoading());
-      const res = await axios.post('/api/v1/user/register', values);
+      const res = await axiosInstance.post('/api/auth/register', values);
       dispatch(hideLoading());
       if (res.data.success) {
-        message.success('Register Successfully!');
+        // Don't store token here, just show success message and redirect to login
+        message.success('Registration Successful!');
         navigate('/login');
       } else {
-        message.error(res.data.message);
+        message.error(res.data.message || 'Registration failed');
       }
     } catch (error) {
       dispatch(hideLoading());
-      console.log(error);
-      message.error('Something Went Wrong');
+      message.error(error.response?.data?.message || 'Something went wrong!');
+      console.error('Registration error:', error);
     }
   };
-
   return (
     <div className="auth-main-container">
       <div className="auth-box">
@@ -37,43 +34,16 @@ const Register = () => {
           <div className='form-container'>
             <Form layout="vertical" onFinish={onFinishHandler} className='register-form'>
               <div className="logo-container">
-                <h4>Quick Medi</h4>
+                <h3 className='text-center'>Hello, <br/><span className="welcome-text">Welcome!</span></h3>
               </div>
-              <h3 className='text-center'>Hello, <br/><span className="welcome-text">Welcome!</span></h3>
-              <Form.Item label="Name" name="name">
-                <Input type="text" placeholder="Your full name" required />
-              </Form.Item>
-              <Form.Item label="Email" name="email">
-                <Input type="email" placeholder="name@mail.com" required />
-              </Form.Item>
-              <Form.Item label="Password" name="password">
-                <Input type="password" placeholder="••••••••••••" required />
-              </Form.Item>
-              <Form.Item label="User Type" name="userType" rules={[{ required: true, message: 'Please select user type!' }]}> 
-                <select style={{ width: '100%', padding: '8px', borderRadius: '4px' }}>
-                  <option value="user">User</option>
-                  <option value="doctor">Doctor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </Form.Item>
+              <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter your name' }]}> <Input /> </Form.Item>
+              <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Please enter your email' }]}> <Input type="email" /> </Form.Item>
+              <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please enter your password' }]}> <Input.Password /> </Form.Item>
               <div className="button-group">
-                <button className="btn btn-primary" type="submit">
-                  Register
-                </button>
-                <Link to="/login" className="btn btn-outline">
-                  Login
-                </Link>
+                <button className="btn btn-primary" type="submit">Register</button>
               </div>
-              <div className="divider"><span>or</span></div>
-              <div className="social-login-options">
-                <button className="social-btn google-btn"><img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png" alt="Google" className="social-icon"/> Login with Google</button>
-                <button className="social-btn facebook-btn"><img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook" className="social-icon"/> Login with Facebook</button>
-              </div>
-              <div className="social-links">
-                <span>FOLLOW</span>
-                <a href="#"><FacebookOutlined /></a>
-                <a href="#"><TwitterOutlined /></a>
-                <a href="#"><InstagramOutlined /></a>
+              <div style={{ marginTop: 16 }}>
+                Already have an account? <Link to="/login">Login</Link>
               </div>
             </Form>
           </div>
@@ -87,5 +57,4 @@ const Register = () => {
     </div>
   );
 };
-
 export default Register;
